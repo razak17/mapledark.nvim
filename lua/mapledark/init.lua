@@ -13,6 +13,12 @@ local _cache = {
   plugins_loaded = {},
 }
 
+local default_config = {
+  disable_plugin_highlights = false,
+  force = false,
+  plugins = nil,
+}
+
 -- Get cached colors or create them
 local function get_colors()
   if _cache.colors then
@@ -68,10 +74,19 @@ M.colors = setmetatable({}, {
 
 -- Apply the colorscheme
 function M.setup(opts)
-  opts = opts or {}
+	if not vim.g.mapledark_config or not vim.g.mapledark_config.loaded then -- if it's the first time setup() is called
+		vim.g.mapledark_config = vim.tbl_deep_extend("keep", vim.g.mapledark_config or {}, default_config)
+    local cfg = vim.g.mapledark_config
+    cfg["loaded"] = value
+    vim.g.mapledark_config = cfg
+  end
+
+	if opts then
+		vim.g.mapledark_config = vim.tbl_deep_extend("force", vim.g.mapledark_config, opts)
+	end
 
   -- Check if already loaded and not forcing reload
-  if _cache.highlights_loaded and not opts.force then
+  if _cache.highlights_loaded and not vim.g.mapledark_config.force then
     return
   end
 
@@ -424,8 +439,8 @@ function M.setup(opts)
   _cache.highlights_loaded = true
 
   -- Load plugin highlights lazily if not disabled
-  if not opts.disable_plugin_highlights then
-    M.load_plugin_highlights(opts.plugins)
+  if not vim.g.mapledark_config.disable_plugin_highlights then
+    M.load_plugin_highlights(vim.g.mapledark_config.plugins)
   end
 end
 
